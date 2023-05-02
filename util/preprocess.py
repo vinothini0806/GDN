@@ -109,7 +109,9 @@ def build_loc_net(struc, all_features, feature_map=[]):
             # edge_indexes[0].append(p_index)
             # edge_indexes[1].append(c_index)
             edge_indexes[0].append(c_index)
+            # print("edge_indexes[0].append(c_index)",edge_indexes[0])
             edge_indexes[1].append(p_index)
+            # print("edge_indexes[1].append(p_index)",edge_indexes[1])
         
 
     

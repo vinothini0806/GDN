@@ -35,7 +35,7 @@ def test(model, dataloader):
     t_test_labels_list = []
 
     test_len = len(dataloader)
-
+    print("test_len",test_len)
     model.eval()
 
     i = 0
@@ -45,7 +45,7 @@ def test(model, dataloader):
         
         with torch.no_grad():
             predicted = model(x, edge_index).float().to(device)
-            
+            # print("len(predicted)",len(predicted))
             
             loss = loss_func(predicted, y)
             

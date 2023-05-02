@@ -13,8 +13,9 @@ class TimeDataset(Dataset):
         self.config = config
         self.edge_index = edge_index
         self.mode = mode
-
+        # x_data is list of list without label column in the data
         x_data = raw_data[:-1]
+        # labels is the label column which is the list
         labels = raw_data[-1]
 
 
@@ -40,17 +41,20 @@ class TimeDataset(Dataset):
         is_train = self.mode == 'train'
 
         node_num, total_time_len = data.shape
-
+        # training data only overlappping but testing data is not overlapping
         rang = range(slide_win, total_time_len, slide_stride) if is_train else range(slide_win, total_time_len)
-        
+        # print("rang", rang )
         for i in rang:
-
+            # ft is the previous 5 datas
             ft = data[:, i-slide_win:i]
+            # print("ft",ft)
+            # tar is the target next raw data which need to be predicted by the model
             tar = data[:, i]
+            # print("tar",tar)
 
             x_arr.append(ft)
             y_arr.append(tar)
-
+            # labels_arr is the label of target next raw data
             labels_arr.append(labels[i])
 
 

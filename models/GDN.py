@@ -9,7 +9,10 @@ from torch_geometric.nn import GCNConv, GATConv, EdgeConv
 import math
 import torch.nn.functional as F
 
-from .graph_layer import GraphLayer
+import sys
+sys.path.append("models/graph_layer")
+from graph_layer import GraphLayer
+# from .graph_layer import GraphLayer
 
 
 def get_batch_edge_index(org_edge_index, batch_num, node_num):

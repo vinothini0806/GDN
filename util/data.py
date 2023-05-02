@@ -33,6 +33,7 @@ def eval_scores(scores, true_scores, th_steps, return_thresold=False):
         scores = padding_list + scores
 
     scores_sorted = rankdata(scores, method='ordinal')
+    
     th_steps = th_steps
     # th_steps = 500
     th_vals = np.array(range(th_steps)) * 1.0 / th_steps
@@ -40,7 +41,7 @@ def eval_scores(scores, true_scores, th_steps, return_thresold=False):
     thresholds = [None] * th_steps
     for i in range(th_steps):
         cur_pred = scores_sorted > th_vals[i] * len(scores)
-
+        # print("cur_pred",cur_pred)
         fmeas[i] = f1_score(true_scores, cur_pred)
 
         score_index = scores_sorted.tolist().index(int(th_vals[i] * len(scores)+1))
@@ -75,8 +76,9 @@ def eval_mseloss(predicted, ground_truth):
 def get_err_median_and_iqr(predicted, groundtruth):
 
     np_arr = np.abs(np.subtract(np.array(predicted), np.array(groundtruth)))
-
+    # Calculate median of calculated absolute values of the error
     err_median = np.median(np_arr)
+    # returns the difference between 75th quantile and 25 th quantile
     err_iqr = iqr(np_arr)
 
     return err_median, err_iqr

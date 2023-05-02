@@ -1,0 +1,8 @@
+Accelerometer1RMS
+Accelerometer2RMS
+Current
+Pressure
+Temperature
+Thermocouple
+Voltage
+Volume Flow RateRMS

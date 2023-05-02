@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+
+# %load main.py
 import pandas as pd
 import numpy as np
 import torch
@@ -12,11 +13,17 @@ from util.preprocess import build_loc_net, construct_data
 from util.net_struct import get_feature_map, get_fc_graph_struc
 from util.iostream import printsep
 
-from datasets.TimeDataset import TimeDataset
+import sys
+sys.path.append('datasets')
+from TimeDataset import TimeDataset
+# from datasets.TimeDataset import TimeDataset
+import sys
+sys.path.append('models')
+from GDN import GDN
 
-
-from models.GDN import GDN
-
+# from models.GDN import GDN
+# import sys
+# sys.path.append('./')
 from train import train
 from test  import test
 from evaluate import get_err_scores, get_best_performance_data, get_val_performance_data, get_full_err_scores
@@ -44,23 +51,28 @@ class Main():
         train_orig = pd.read_csv(f'./data/{dataset}/train.csv', sep=',', index_col=0)
         test_orig = pd.read_csv(f'./data/{dataset}/test.csv', sep=',', index_col=0)
        
+        # train means traininng dataset and test mens testing dataset
         train, test = train_orig, test_orig
 
         if 'attack' in train.columns:
             train = train.drop(columns=['attack'])
-
+        # feature_map is list which contains column names as list
         feature_map = get_feature_map(dataset)
+        # fc_struc is the distionary which comtains keys as columns. 
+        # and each columns has values as list of other columns except itself
         fc_struc = get_fc_graph_struc(dataset)
 
         set_device(env_config['device'])
         self.device = get_device()
-
+        # fc_edge_index which have edge index of parent and child for each node in graph. 
+        # here each node connected to other nodes except itself
         fc_edge_index = build_loc_net(fc_struc, list(train.columns), feature_map=feature_map)
         fc_edge_index = torch.tensor(fc_edge_index, dtype = torch.long)
 
         self.feature_map = feature_map
-
+        # train_dataset_indata is list of list which contains each columns as list and last list has values for labels
         train_dataset_indata = construct_data(train, feature_map, labels=0)
+        # test_dataset_indata is list of list which contains each columns as list and last list has values for labels
         test_dataset_indata = construct_data(test, feature_map, labels=test.attack.tolist())
 
 
@@ -68,8 +80,9 @@ class Main():
             'slide_win': train_config['slide_win'],
             'slide_stride': train_config['slide_stride'],
         }
-
+        # train_dataset have the slided data which have x, y and label for predicted y
         train_dataset = TimeDataset(train_dataset_indata, fc_edge_index, mode='train', config=cfg)
+        # test_dataset have the slided data which have x, y and label for predicted y
         test_dataset = TimeDataset(test_dataset_indata, fc_edge_index, mode='test', config=cfg)
 
 
@@ -93,8 +106,7 @@ class Main():
                 input_dim=train_config['slide_win'],
                 out_layer_num=train_config['out_layer_num'],
                 out_layer_inter_dim=train_config['out_layer_inter_dim'],
-                topk=train_config['topk']
-            ).to(self.device)
+                topk=train_config['topk']).to(self.device)
 
 
 
@@ -148,17 +160,18 @@ class Main():
         return train_dataloader, val_dataloader
 
     def get_score(self, test_result, val_result):
-
+        # print("test_result[0][0]",test_result[0][0])
         feature_num = len(test_result[0][0])
         np_test_result = np.array(test_result)
         np_val_result = np.array(val_result)
-
+        
         test_labels = np_test_result[2, :, 0].tolist()
-    
+        # print("test_labels",test_labels)
+        # test_scores for tesitng data, normal_scores for validation data for each columns individually
         test_scores, normal_scores = get_full_err_scores(test_result, val_result)
 
-        top1_best_info = get_best_performance_data(test_scores, test_labels, topk=1) 
-        top1_val_info = get_val_performance_data(test_scores, normal_scores, test_labels, topk=1)
+        top1_best_info = get_best_performance_data(test_scores, test_labels, topk=5) 
+        top1_val_info = get_val_performance_data(test_scores, normal_scores, test_labels, topk=5)
 
 
         print('=========================** Result **============================\n')
@@ -172,6 +185,8 @@ class Main():
         print(f'F1 score: {info[0]}')
         print(f'precision: {info[1]}')
         print(f'recall: {info[2]}\n')
+        print(f'Missing alarm rate: {info[5]}\n')
+        print(f'False alarm rate: {info[6]}\n')
 
 
     def get_save_path(self, feature_name=''):
@@ -180,7 +195,7 @@ class Main():
         
         if self.datestr is None:
             now = datetime.now()
-            self.datestr = now.strftime('%m|%d-%H:%M:%S')
+            self.datestr = now.strftime('%m_%d_%H_%M_%S')
         datestr = self.datestr          
 
         paths = [
